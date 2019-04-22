@@ -43,7 +43,7 @@ endif()
 
 # Include libraries
 find_package(PkgConfig REQUIRED)
-find_package(CUDA 10.0 REQUIRED)
+find_package(CUDA 9.0 REQUIRED)
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set(CUDA_HOST_COMPILER g++)

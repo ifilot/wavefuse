@@ -45,6 +45,7 @@ void CardManager::probe_cards() {
         // std::cout << "    Memory Clock Rate (KHz): " << prop.memoryClockRate << std::endl;
         // std::cout << "    Memory Bus Width (bits): " << prop.memoryBusWidth << std::endl;
         std::cout << "    Number of cores: " << this->get_number_cores((void*)&prop) << std::endl;
+        std::cout << "    Clock frequency: " << (prop.clockRate / (double)1024) << " MHz" << std::endl;
         std::cout << "    Number of MP units: " << prop.multiProcessorCount << std::endl;
         std::cout << "    Maximum threads per block: " << prop.maxThreadsPerBlock << std::endl;
         std::cout << "    Maximum global memory: " << (prop.totalGlobalMem)/(double)(1024*1024) << " MB" << std::endl;
