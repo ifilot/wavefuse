@@ -30,10 +30,11 @@
 
 class RD3D {
 private:
-    unsigned int mx = 64;
-    unsigned int my = 64;
-    unsigned int mz = 64;
-    unsigned int ncells = 64 * 64 * 64;
+    unsigned int dim = 256;
+    unsigned int mx = dim;
+    unsigned int my = dim;
+    unsigned int mz = dim;
+    unsigned int ncells = dim * dim * dim;
 
     unsigned int pencils = 4;
 
@@ -57,6 +58,9 @@ private:
     std::string donestring = "           [DONE]";
 
 public:
+    /**
+     * @brief      Constructs the object.
+     */
     RD3D();
 
     /**

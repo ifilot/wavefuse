@@ -13,7 +13,7 @@ obj_object = bpy.context.selected_objects[0]
 bpy.ops.object.shade_smooth()
 mat = bpy.data.materials.get('shiny')
 obj_object.data.materials.append(mat)
-scale = 1.0
+scale = 0.25
 obj_object.scale.x = scale
 obj_object.scale.y = scale
 obj_object.scale.z = scale

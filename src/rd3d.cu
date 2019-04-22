@@ -37,6 +37,13 @@ RD3D::RD3D() {
 
 }
 
+/**
+ * @brief      Check whether there was a cuda error and report error
+ *
+ * @param[in]  result  The result
+ *
+ * @return     cuda result
+ */
 inline cudaError_t checkCuda(cudaError_t result) {
     #if defined(DEBUG) || defined(_DEBUG)
     if (result != cudaSuccess) {
@@ -48,7 +55,13 @@ inline cudaError_t checkCuda(cudaError_t result) {
     return result;
 }
 
-__global__ void derivative_x2(const float *f, float *df) {
+/**
+ * @brief      Calculate second derivative in x direction with periodic boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_x2_pbc(const float *f, float *df) {
     const int offset = 1;
     extern __shared__ float s_f[]; // 2-wide halo
 
@@ -75,7 +88,13 @@ __global__ void derivative_x2(const float *f, float *df) {
     df[globalIdx] = s_f[sj * (d_mx + 2 * offset) + si + 1] - 2.0 * s_f[sj * (d_mx + 2 * offset) + si] + s_f[sj * (d_mx + 2 * offset) + si - 1];
 }
 
-__global__ void derivative_y2(const float *f, float *df) {
+/**
+ * @brief      Calculate second derivative in y direction with periodic boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_y2_pbc(const float *f, float *df) {
     const int offset = 1;
     extern __shared__ float s_f[]; // 2-wide halo
 
@@ -102,7 +121,13 @@ __global__ void derivative_y2(const float *f, float *df) {
     df[globalIdx] = s_f[(sj+1) * d_pencils + si] - 2.0 * s_f[sj * d_pencils + si] + s_f[(sj-1) * d_pencils + si];
 }
 
-__global__ void derivative_z2(const float *f, float *df) {
+/**
+ * @brief      Calculate second derivative in z direction with periodic boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_z2_pbc(const float *f, float *df) {
     const int offset = 1;
     extern __shared__ float s_f[]; // 2-wide halo
 
@@ -129,6 +154,14 @@ __global__ void derivative_z2(const float *f, float *df) {
     df[globalIdx] = s_f[(sk+1) * d_pencils + si] - 2.0 * s_f[sk * d_pencils + si] + s_f[(sk-1) * d_pencils + si];
 }
 
+/**
+ * @brief      Construct the Laplacian for component A
+ *
+ * @param      df    pointer to laplacian values
+ * @param[in]  dfx   pointer to second derivative in x direction
+ * @param[in]  dfy   pointer to second derivative in y direction
+ * @param[in]  dfz   pointer to second derivative in z direction
+ */
 __global__ void construct_laplacian_a(float *df, const float *dfx, const float *dfy, const float *dfz) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -138,6 +171,14 @@ __global__ void construct_laplacian_a(float *df, const float *dfx, const float *
     }
 }
 
+/**
+ * @brief      Construct the Laplacian for component B
+ *
+ * @param      df    pointer to laplacian values
+ * @param[in]  dfx   pointer to second derivative in x direction
+ * @param[in]  dfy   pointer to second derivative in y direction
+ * @param[in]  dfz   pointer to second derivative in z direction
+ */
 __global__ void construct_laplacian_b(float *df, const float *dfx, const float *dfy, const float *dfz) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -147,6 +188,14 @@ __global__ void construct_laplacian_b(float *df, const float *dfx, const float *
     }
 }
 
+/**
+ * @brief      Calculate gray-scott reaction rate
+ *
+ * @param[in]  fx    pointer to concentration of compound A
+ * @param[in]  fy    pointer to concentration of compound B
+ * @param      drx   pointer to reaction rate of compound A
+ * @param      dry   pointer to reaction rate of compound B
+ */
 __global__ void reaction(const float *fx, const float *fy, float *drx, float *dry) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -158,6 +207,16 @@ __global__ void reaction(const float *fx, const float *fy, float *drx, float *dr
     }
 }
 
+/**
+ * @brief      Perform time-step integration
+ *
+ * @param      x     pointer to concentration of A
+ * @param      y     pointer to concentration of B
+ * @param[in]  ddx   diffusion of component A
+ * @param[in]  ddy   diffusion of component B
+ * @param[in]  drx   reaction of component A
+ * @param[in]  dry   reaction of component B
+ */
 __global__ void update(float *x, float *y, const float *ddx, const float *ddy, const float *drx, const float *dry) {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
     int stride = blockDim.x * gridDim.x;
@@ -168,6 +227,9 @@ __global__ void update(float *x, float *y, const float *ddx, const float *ddy, c
     }
 }
 
+/**
+ * @brief      Run time-integration on GPU
+ */
 void RD3D::run_cuda() {
     this->initialize_variables();
 
@@ -200,15 +262,15 @@ void RD3D::run_cuda() {
 
         for(unsigned int i=0; i<this->tsteps; i++) {
             // calculate laplacian for A
-            derivative_x2<<<gridx,blockx,shared_mem_size>>>(d_a, d_dx2);
-            derivative_y2<<<gridy,blocky,shared_mem_size>>>(d_a, d_dy2);
-            derivative_z2<<<gridz,blockz,shared_mem_size>>>(d_a, d_dz2);
+            derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_a, d_dx2);
+            derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_a, d_dy2);
+            derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_a, d_dz2);
             construct_laplacian_a<<<grid,block>>>(d_da, d_dx2, d_dy2, d_dz2);
 
             // calculate laplacian for B
-            derivative_x2<<<gridx,blockx,shared_mem_size>>>(d_b, d_dx2);
-            derivative_y2<<<gridy,blocky,shared_mem_size>>>(d_b, d_dy2);
-            derivative_z2<<<gridz,blockz,shared_mem_size>>>(d_b, d_dz2);
+            derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_b, d_dx2);
+            derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_b, d_dy2);
+            derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_b, d_dz2);
             construct_laplacian_b<<<grid,block>>>(d_db, d_dx2, d_dy2, d_dz2);
 
             // // calculate reaction
@@ -230,10 +292,10 @@ void RD3D::run_cuda() {
         checkCuda( cudaMemcpy(this->b, this->d_b, bytes, cudaMemcpyDeviceToHost) );
 
         char buffer[50];
-        sprintf(buffer, "data_%03i.bin", t+1);
+        sprintf(buffer, "data_%03i.bin", (t+1));
         this->write_binary(std::string(buffer), b);
 
-        printf("|  %04i  |              %12.6f ms  |\n", t, milliseconds);
+        printf("|  %04i  |              %12.6f ms  |\n", (t+1), milliseconds);
     }
     printf("+--------+-------------------------------|\n");
 
