@@ -28,11 +28,25 @@ class CardManager {
 private:
 
 public:
+
+    /**
+     * @brief      Constructs the object.
+     */
     CardManager();
 
+    /**
+     * @brief      Probe the available GPU units
+     */
     void probe_cards();
 private:
-
+    /**
+     * @brief      Get the total number of cores on the GPU
+     *
+     * @param      devProp  Card properties
+     *
+     * @return     The number cores.
+     */
+    int get_number_cores(void* devProp);
 };
 
 #endif // _CARD_MANAGER_H
