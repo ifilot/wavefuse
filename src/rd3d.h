@@ -45,14 +45,14 @@ private:
     float *d_a, *d_b, *d_dx2, *d_dy2, *d_dz2, *d_ra, *d_rb, *d_da, *d_db;
 
     // reaction settings of kinetic system
-    const float f = 0.0416;     //!< reactivity constant f
-    const float k = 0.0625;     //!< reactivity constant f
+    const float f = 0.0392;     //!< reactivity constant f
+    const float k = 0.0649;     //!< reactivity constant f
     const float Da = 0.16;      //!< diffusion constant of A
     const float Db = 0.08;      //!< diffusion constant of B
     const float dt = 0.25;      //!< temporal discretization
     const float dx = 0.5;       //!< spatial discretization
 
-    unsigned int timesteps = 360;
+    unsigned int timesteps = 720;
     unsigned int tsteps = 100;
 
     std::string donestring = "           [DONE]";
