@@ -432,12 +432,11 @@ void RD3D::write_binary(const std::string filename, const float *vals) {
     out.write((char*)&dim, sizeof(uint16_t));
     dim = this->mz;
     out.write((char*)&dim, sizeof(uint16_t));
+    dim = sizeof(float);
+    out.write((char*)&dim, sizeof(uint16_t));
 
     // write values
-    for(unsigned int i=0; i<this->ncells; i++) {
-        double val = vals[i];
-        out.write((char*)&val, sizeof(double));
-    }
+    out.write((const char*)vals, sizeof(float) * this->ncells);
 
     out.close();
 }
