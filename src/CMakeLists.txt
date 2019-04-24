@@ -29,8 +29,8 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules )
 # prepare configuration file
 SET(PROGNAME "Wavefuse")
 SET(VERSION_MAJOR "0")
-SET(VERSION_MINOR "1")
-SET(VERSION_MICRO "2")
+SET(VERSION_MINOR "2")
+SET(VERSION_MICRO "0")
 configure_file(config.h.in ../src/config.h @ONLY)
 
 # Enable release build
@@ -41,18 +41,39 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
+# add OS specific
+if(APPLE)
+    add_definitions(-D_APPLE)
+    SET(BOOST_INCLUDEDIR "/usr/local/include")
+    SET(BOOST_LIBRARYDIR "/usr/local/lib")
+else()
+    SET(BOOST_INCLUDEDIR "/usr/include")
+    SET(BOOST_LIBRARYDIR "/usr/lib/x86_64-linux-gnu")
+endif()
+
+# set Boost
+set (Boost_NO_SYSTEM_PATHS ON)
+set (Boost_USE_MULTITHREADED ON)
+set (Boost_USE_STATIC_LIBS ON)
+set (Boost_USE_STATIC_RUNTIME OFF)
+set (BOOST_ALL_DYN_LINK OFF)
+
 # Include libraries
 find_package(PkgConfig REQUIRED)
 find_package(CUDA 9.0 REQUIRED)
+find_package(Boost COMPONENTS regex REQUIRED)
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set(CUDA_HOST_COMPILER g++)
+pkg_check_modules(TCLAP tclap REQUIRED)
 pkg_check_modules(EIGEN eigen3 REQUIRED)
 
 # Set include folders
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_BINARY_DIR}
-                    ${EIGEN_INCLUDE_DIRS})
+                    ${EIGEN_INCLUDE_DIRS}
+                    ${TCLAP_INCLUDE_DIR}
+                    ${Boost_INCLUDE_DIRS})
 
 # Add sources
 file(GLOB SOURCES "*.cpp")
@@ -66,4 +87,4 @@ add_definitions(-std=c++17 -march=native)
 # Link libraries
 SET(CMAKE_EXE_LINKER_FLAGS "-Wl,-rpath=\$ORIGIN/lib")
 add_executable(wavefuse ${SOURCES})
-target_link_libraries(wavefuse wavefuse_gpu)
+target_link_libraries(wavefuse wavefuse_gpu ${Boost_LIBRARIES})

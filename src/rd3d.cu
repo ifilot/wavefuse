@@ -308,6 +308,20 @@ void RD3D::run_cuda() {
 }
 
 /**
+ * @brief      Set unit cell dimensions
+ *
+ * @param[in]  _mx   dimensionality for x
+ * @param[in]  _my   dimensionality for y
+ * @param[in]  _mz   dimensionality for z
+ */
+void RD3D::set_dimensions(unsigned int _mx, unsigned int _my, unsigned int _mz) {
+    this->mx = _mx;
+    this->my = _my;
+    this->mz = _mz;
+    this->ncells = this->mx * this->my * this->mz;
+}
+
+/**
  * @brief      Initialize all variables
  */
 void RD3D::initialize_variables() {

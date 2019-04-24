@@ -45,12 +45,12 @@ private:
     float *d_a, *d_b, *d_dx2, *d_dy2, *d_dz2, *d_ra, *d_rb, *d_da, *d_db;
 
     // reaction settings of kinetic system
-    const float f = 0.0392;     //!< reactivity constant f
-    const float k = 0.0649;     //!< reactivity constant f
-    const float Da = 0.16;      //!< diffusion constant of A
-    const float Db = 0.08;      //!< diffusion constant of B
-    const float dt = 0.25;      //!< temporal discretization
-    const float dx = 0.5;       //!< spatial discretization
+    float f = 0.0392;           //!< reactivity constant f
+    float k = 0.0649;           //!< reactivity constant f
+    float Da = 0.16;            //!< diffusion constant of A
+    float Db = 0.08;            //!< diffusion constant of B
+    float dt = 0.25;            //!< temporal discretization
+    float dx = 0.5;             //!< spatial discretization
 
     unsigned int timesteps = 720;
     unsigned int tsteps = 100;
@@ -67,6 +67,52 @@ public:
      * @brief      Run time-integration on GPU
      */
     void run_cuda();
+
+    /**
+     * @brief      Set unit cell dimensions
+     *
+     * @param[in]  _mx   dimensionality for x
+     * @param[in]  _my   dimensionality for y
+     * @param[in]  _mz   dimensionality for z
+     */
+    void set_dimensions(unsigned int _mx, unsigned int _my, unsigned int _mz);
+
+    /**
+     * @brief      Sets the integration variables.
+     *
+     * @param[in]  _dt         Time discretization
+     * @param[in]  _dx         Distance discretization
+     * @param[in]  _timesteps  Number of output timesteps
+     * @param[in]  _tsteps     Number of internal timesteps
+     */
+    void set_integration_variables(float _dt, float _dx, unsigned int _timesteps, unsigned int _tsteps) {
+        this->dt = _dt;
+        this->dx = _dx;
+        this->timesteps = _timesteps;
+        this->tsteps = _tsteps;
+    }
+
+    /**
+     * @brief      Sets the kinetic variables.
+     *
+     * @param[in]  _f    Gray-Scott parameter f
+     * @param[in]  _k    Gray-Scott parameter k
+     */
+    void set_kinetic_variables(double _f, double _k) {
+        this->f = _f;
+        this->k = _k;
+    }
+
+    /**
+     * @brief      Sets the kinetic variables.
+     *
+     * @param[in]  _f    Gray-Scott parameter f
+     * @param[in]  _k    Gray-Scott parameter k
+     */
+    void set_diffusion_parameters(double _Da, double _Db) {
+        this->Da = _Da;
+        this->Db = _Db;
+    }
 
 private:
     /**

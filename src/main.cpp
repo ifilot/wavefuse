@@ -21,31 +21,53 @@
 
 #include <iostream>
 #include <chrono>
+#include <tclap/CmdLine.h>
 
 #include "config.h"
 #include "rd3d.h"
 #include "card_manager.h"
+#include "inputreader.h"
 
-int main() {
-    std::cout << "--------------------------------------------------------------" << std::endl;
-    std::cout << "Executing "<< PROGRAM_NAME << " v." << PROGRAM_VERSION << std::endl;
-    std::cout << "Author: Ivo Filot <i.a.w.filot@tue.nl>" << std::endl;
-    std::cout << "Website: https://gitlab.tue.nl/ifilot/ftcs-cuda" << std::endl;
-    std::cout << "--------------------------------------------------------------" << std::endl;
+int main(int argc, char* argv[]) {
+    try {
+        TCLAP::CmdLine cmd("Performs integration on 3D reaction-diffusion systems.", ' ', PROGRAM_VERSION);
 
-    auto start = std::chrono::system_clock::now();
+        //**************************************
+        // declare values to be parsed
+        //**************************************
 
-    CardManager cm;
-    cm.probe_cards();
+        // input filename
+        TCLAP::ValueArg<std::string> arg_input_filename("i","input","Input file",true,"input","filename");
+        cmd.add(arg_input_filename);
 
-    RD3D rd3d;
-    rd3d.run_cuda();
+        cmd.parse(argc, argv);
 
-    auto end = std::chrono::system_clock::now();
-    std::chrono::duration<double> elapsed_seconds = end-start;
+        std::cout << "--------------------------------------------------------------" << std::endl;
+        std::cout << "Executing "<< PROGRAM_NAME << " v." << PROGRAM_VERSION << std::endl;
+        std::cout << "Author: Ivo Filot <i.a.w.filot@tue.nl>" << std::endl;
+        std::cout << "Website: https://gitlab.tue.nl/ifilot/ftcs-cuda" << std::endl;
+        std::cout << "--------------------------------------------------------------" << std::endl;
 
-    std::cout << "----------------------------------------------------------" << std::endl;
-    std::cout << "Done execution in " << elapsed_seconds.count() << " seconds." << std::endl << std::endl;
+        auto start = std::chrono::system_clock::now();
 
-    return 0;
+        CardManager cm;
+        cm.probe_cards();
+
+        InputReader ir;
+        RD3D rd3d = ir.build_integrator(arg_input_filename.getValue());
+        rd3d.run_cuda();
+
+        auto end = std::chrono::system_clock::now();
+        std::chrono::duration<double> elapsed_seconds = end-start;
+
+        std::cout << "----------------------------------------------------------" << std::endl;
+        std::cout << "Done execution in " << elapsed_seconds.count() << " seconds." << std::endl << std::endl;
+
+        return 0;
+
+    }  catch (TCLAP::ArgException &e) {
+        std::cerr << "error: " << e.error() <<
+                     " for arg " << e.argId() << std::endl;
+        return -1;
+    }
 }

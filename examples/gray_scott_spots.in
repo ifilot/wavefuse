@@ -1,0 +1,23 @@
+# inputfile for Gray-Scott reaction-diffusion system
+
+# Diffusion constants
+Da = 0.16
+Db = 0.08
+
+# Integration constants
+dt = 0.25
+dx = 0.5
+timesteps = 60
+tsteps = 100
+
+# Gray-Scott kinetic coefficients
+f = 0.0392
+k = 0.0649
+
+# Unit cell dimensions
+mx = 64
+my = 64
+mz = 64
+
+# GPU settings
+pencils = 4
