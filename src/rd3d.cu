@@ -89,6 +89,35 @@ __global__ void derivative_x2_pbc(const float *f, float *df) {
 }
 
 /**
+ * @brief      Calculate second derivative in x direction with zero-flux boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_x2_zeroflux(const float *f, float *df) {
+    extern __shared__ float s_f[];
+
+    int i   = threadIdx.x;
+    int j   = blockIdx.x * blockDim.y + threadIdx.y;
+    int k   = blockIdx.y;
+    int sj  = threadIdx.y; // local j for shared memory access
+
+    int globalIdx = k * d_mx * d_my + j * d_mx + i;
+
+    s_f[sj * d_mx + i] = f[globalIdx];
+
+    __syncthreads();
+
+    if(i == 0) {
+        df[globalIdx] = s_f[sj * d_mx + i + 1] - s_f[sj * d_mx + i];
+    } else if(i == (d_mx - 1)) {
+        df[globalIdx] = s_f[sj * d_mx + i - 1] - s_f[sj * d_mx + i];
+    } else {
+        df[globalIdx] = s_f[sj * d_mx + i + 1] - 2.0 * s_f[sj * d_mx + i] + s_f[sj * d_mx + i - 1];
+    }
+}
+
+/**
  * @brief      Calculate second derivative in y direction with periodic boundary conditions
  *
  * @param[in]  f     pointer with values
@@ -122,6 +151,35 @@ __global__ void derivative_y2_pbc(const float *f, float *df) {
 }
 
 /**
+ * @brief      Calculate second derivative in y direction with zero-flux  boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_y2_zeroflux(const float *f, float *df) {
+    extern __shared__ float s_f[];
+
+    int i  = blockIdx.x * blockDim.x + threadIdx.x;
+    int j  = threadIdx.y;
+    int k  = blockIdx.y;
+    int si = threadIdx.x;
+
+    int globalIdx = k * d_mx * d_my + j * d_mx + i;
+
+    s_f[j * d_pencils + si] = f[globalIdx];
+
+    __syncthreads();
+
+    if(j == 0) {
+        df[globalIdx] = s_f[(j+1) * d_pencils + si] - s_f[j * d_pencils + si];
+    } else if(j == (d_my - 1)) {
+        df[globalIdx] = s_f[(j-1) * d_pencils + si] - s_f[j * d_pencils + si];
+    } else {
+        df[globalIdx] = s_f[(j+1) * d_pencils + si] - 2.0 * s_f[j * d_pencils + si] + s_f[(j-1) * d_pencils + si];
+    }
+}
+
+/**
  * @brief      Calculate second derivative in z direction with periodic boundary conditions
  *
  * @param[in]  f     pointer with values
@@ -152,6 +210,35 @@ __global__ void derivative_z2_pbc(const float *f, float *df) {
     __syncthreads();
 
     df[globalIdx] = s_f[(sk+1) * d_pencils + si] - 2.0 * s_f[sk * d_pencils + si] + s_f[(sk-1) * d_pencils + si];
+}
+
+/**
+ * @brief      Calculate second derivative in z direction with zero-flux boundary conditions
+ *
+ * @param[in]  f     pointer with values
+ * @param      df    pointer with second derivatives
+ */
+__global__ void derivative_z2_zeroflux(const float *f, float *df) {
+    extern __shared__ float s_f[]; // 2-wide halo
+
+    int i  = blockIdx.x * blockDim.x + threadIdx.x;
+    int j  = blockIdx.y;
+    int k  = threadIdx.y;
+    int si = threadIdx.x;
+
+    int globalIdx = k * d_mx * d_my + j * d_mx + i;
+
+    s_f[k * d_pencils + si] = f[globalIdx];
+
+    __syncthreads();
+
+    if(k == 0) {
+        df[globalIdx] = s_f[(k+1) * d_pencils + si] - s_f[k * d_pencils + si];
+    } else if(k == (d_mz - 1)) {
+        df[globalIdx] = s_f[(k-1) * d_pencils + si] - s_f[k * d_pencils + si];
+    } else {
+        df[globalIdx] = s_f[(k+1) * d_pencils + si] - 2.0 * s_f[k * d_pencils + si] + s_f[(k-1) * d_pencils + si];
+    }
 }
 
 /**
@@ -244,7 +331,13 @@ void RD3D::run_cuda() {
     dim3 blockz(this->pencils, this->mz, 1);
     unsigned int block = this->mx;;
     unsigned int grid = (this->ncells + this->mx - 1) / this->mx;
-    unsigned shared_mem_size = this->pencils * (this->mx + 2 * 1) * sizeof(float);
+
+    unsigned shared_mem_size = 0;
+    if(this->zeroflux) {
+        shared_mem_size = this->pencils * this->mx * sizeof(float);
+    } else {
+        shared_mem_size = this->pencils * (this->mx + 2) * sizeof(float);
+    }
     std::cout << donestring << std::endl;
 
     // keep track of time
@@ -262,15 +355,27 @@ void RD3D::run_cuda() {
 
         for(unsigned int i=0; i<this->tsteps; i++) {
             // calculate laplacian for A
-            derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_a, d_dx2);
-            derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_a, d_dy2);
-            derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_a, d_dz2);
+            if(this->zeroflux) {
+                derivative_x2_zeroflux<<<gridx,blockx,shared_mem_size>>>(d_a, d_dx2);
+                derivative_y2_zeroflux<<<gridy,blocky,shared_mem_size>>>(d_a, d_dy2);
+                derivative_z2_zeroflux<<<gridz,blockz,shared_mem_size>>>(d_a, d_dz2);
+            } else {
+                derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_a, d_dx2);
+                derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_a, d_dy2);
+                derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_a, d_dz2);
+            }
             construct_laplacian_a<<<grid,block>>>(d_da, d_dx2, d_dy2, d_dz2);
 
             // calculate laplacian for B
-            derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_b, d_dx2);
-            derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_b, d_dy2);
-            derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_b, d_dz2);
+            if(this->zeroflux) {
+                derivative_x2_zeroflux<<<gridx,blockx,shared_mem_size>>>(d_b, d_dx2);
+                derivative_y2_zeroflux<<<gridy,blocky,shared_mem_size>>>(d_b, d_dy2);
+                derivative_z2_zeroflux<<<gridz,blockz,shared_mem_size>>>(d_b, d_dz2);
+            } else {
+                derivative_x2_pbc<<<gridx,blockx,shared_mem_size>>>(d_b, d_dx2);
+                derivative_y2_pbc<<<gridy,blocky,shared_mem_size>>>(d_b, d_dy2);
+                derivative_z2_pbc<<<gridz,blockz,shared_mem_size>>>(d_b, d_dz2);
+            }
             construct_laplacian_b<<<grid,block>>>(d_db, d_dx2, d_dy2, d_dz2);
 
             // // calculate reaction
@@ -305,20 +410,6 @@ void RD3D::run_cuda() {
 
     std::cout << std::endl;
     this->cleanup_variables();
-}
-
-/**
- * @brief      Set unit cell dimensions
- *
- * @param[in]  _mx   dimensionality for x
- * @param[in]  _my   dimensionality for y
- * @param[in]  _mz   dimensionality for z
- */
-void RD3D::set_dimensions(unsigned int _mx, unsigned int _my, unsigned int _mz) {
-    this->mx = _mx;
-    this->my = _my;
-    this->mz = _mz;
-    this->ncells = this->mx * this->my * this->mz;
 }
 
 /**

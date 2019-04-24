@@ -38,9 +38,11 @@ class InputReader {
 private:
     const std::vector<std::string> double_vars = {"Da", "Db", "dt", "dx", "f", "k"};
     const std::vector<std::string> uint_vars = {"timesteps", "tsteps", "mx", "my", "mz", "pencils"};
+    const std::vector<std::string> bool_vars = {"zeroflux"};
 
     std::unordered_map<std::string, double> double_values;
     std::unordered_map<std::string, unsigned int> uint_values;
+    std::unordered_map<std::string, bool> bool_values;
 
 public:
     /**
@@ -74,7 +76,16 @@ private:
      *
      * @return     value
      */
-    unsigned int get_double(const std::string& name);
+    double get_double(const std::string& name);
+
+    /**
+     * @brief      Get boolean value for variable
+     *
+     * @param[in]  name  Variable name
+     *
+     * @return     value
+     */
+    bool get_bool(const std::string& name);
 };
 
 #endif // _INPUTREADER_H

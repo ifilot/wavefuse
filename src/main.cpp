@@ -45,7 +45,7 @@ int main(int argc, char* argv[]) {
         std::cout << "--------------------------------------------------------------" << std::endl;
         std::cout << "Executing "<< PROGRAM_NAME << " v." << PROGRAM_VERSION << std::endl;
         std::cout << "Author: Ivo Filot <i.a.w.filot@tue.nl>" << std::endl;
-        std::cout << "Website: https://gitlab.tue.nl/ifilot/ftcs-cuda" << std::endl;
+        std::cout << "Website: https://github.com/ifilot/wavefuse" << std::endl;
         std::cout << "--------------------------------------------------------------" << std::endl;
 
         auto start = std::chrono::system_clock::now();

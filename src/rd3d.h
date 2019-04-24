@@ -30,11 +30,10 @@
 
 class RD3D {
 private:
-    unsigned int dim = 256;
-    unsigned int mx = dim;
-    unsigned int my = dim;
-    unsigned int mz = dim;
-    unsigned int ncells = dim * dim * dim;
+    unsigned int mx = 256;
+    unsigned int my = 256;
+    unsigned int mz = 256;
+    unsigned int ncells = mx * my * mz;
 
     unsigned int pencils = 4;
 
@@ -57,6 +56,8 @@ private:
 
     std::string donestring = "           [DONE]";
 
+    bool zeroflux = true;
+
 public:
     /**
      * @brief      Constructs the object.
@@ -75,7 +76,12 @@ public:
      * @param[in]  _my   dimensionality for y
      * @param[in]  _mz   dimensionality for z
      */
-    void set_dimensions(unsigned int _mx, unsigned int _my, unsigned int _mz);
+    void set_dimensions(unsigned int _mx, unsigned int _my, unsigned int _mz) {
+        this->mx = _mx;
+        this->my = _my;
+        this->mz = _mz;
+        this->ncells = this->mx * this->my * this->mz;
+    }
 
     /**
      * @brief      Sets the integration variables.
@@ -112,6 +118,15 @@ public:
     void set_diffusion_parameters(double _Da, double _Db) {
         this->Da = _Da;
         this->Db = _Db;
+    }
+
+    /**
+     * @brief      Set zeroflux boundary conditions
+     *
+     * @param[in]  _zeroflux  The zeroflux boundary condition
+     */
+    void set_zeroflux(bool _zeroflux) {
+        this->zeroflux = _zeroflux;
     }
 
 private:

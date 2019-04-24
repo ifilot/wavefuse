@@ -28,3 +28,13 @@ make -j9
 ```
 
 CMake should automagically detect your CUDA installation.
+
+## Usage
+```
+./wavefuse -i ../path/to/inputfile
+```
+
+Example:
+```
+./wavefuse -i ../examples/gray_scott_spots.in
+```

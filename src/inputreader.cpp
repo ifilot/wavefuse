@@ -40,7 +40,7 @@ RD3D InputReader::build_integrator(const std::string& inputfile) {
 
         static const boost::regex regex_comment("^#.*");
         static const boost::regex regex_empty_line("^\\s*");
-        static const boost::regex regex_variable("^\\s*([A-Za-z0-9]+)\\s+=\\s+([0-9.-]+)\\s*$");
+        static const boost::regex regex_variable("^\\s*([A-Za-z0-9]+)\\s+=\\s+([a-z0-9.-]+)\\s*$");
 
 
         while(std::getline(file, line)) {
@@ -72,6 +72,18 @@ RD3D InputReader::build_integrator(const std::string& inputfile) {
                     this->uint_values.emplace(pieces[0], boost::lexical_cast<unsigned int>(pieces[1]));
                     continue;
                 }
+
+                // store boolean integers
+                if(std::find(this->bool_vars.begin(), this->bool_vars.end(), pieces[0]) != this->bool_vars.end()) {
+                    if(pieces[1] == "true") {
+                        this->bool_values.emplace(pieces[0], true);
+                    } else if(pieces[1] == "false") {
+                        this->bool_values.emplace(pieces[0], false);
+                    } else {
+                        throw std::runtime_error("Invalid boolean value encountered: " + pieces[1]);
+                    }
+                    continue;
+                }
             }
         }
 
@@ -80,6 +92,7 @@ RD3D InputReader::build_integrator(const std::string& inputfile) {
         rd3d.set_integration_variables(this->get_double("dt"), this->get_double("dx"), this->get_uint("timesteps"), this->get_uint("tsteps"));
         rd3d.set_kinetic_variables(this->get_double("f"), this->get_double("k"));
         rd3d.set_diffusion_parameters(this->get_double("Da"), this->get_double("Db"));
+        rd3d.set_zeroflux(this->get_bool("zeroflux"));
 
         return rd3d;
 
@@ -111,9 +124,25 @@ unsigned int InputReader::get_uint(const std::string& name) {
  *
  * @return     value
  */
-unsigned int InputReader::get_double(const std::string& name) {
+double InputReader::get_double(const std::string& name) {
     auto got = this->double_values.find(name);
     if(got != this->double_values.end()) {
+        return got->second;
+    } else {
+        throw std::runtime_error("Cannot find variable " + name);
+    }
+}
+
+/**
+ * @brief      Get bool value for variable
+ *
+ * @param[in]  name  Variable name
+ *
+ * @return     value
+ */
+bool InputReader::get_bool(const std::string& name) {
+    auto got = this->bool_values.find(name);
+    if(got != this->bool_values.end()) {
         return got->second;
     } else {
         throw std::runtime_error("Cannot find variable " + name);

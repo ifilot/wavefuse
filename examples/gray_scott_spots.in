@@ -7,7 +7,7 @@ Db = 0.08
 # Integration constants
 dt = 0.25
 dx = 0.5
-timesteps = 60
+timesteps = 360
 tsteps = 100
 
 # Gray-Scott kinetic coefficients
@@ -15,9 +15,10 @@ f = 0.0392
 k = 0.0649
 
 # Unit cell dimensions
-mx = 64
-my = 64
-mz = 64
+mx = 256
+my = 256
+mz = 256
+zeroflux = true
 
 # GPU settings
 pencils = 4
