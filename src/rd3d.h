@@ -27,6 +27,7 @@
 #include <assert.h>
 #include <random>
 #include <fstream>
+#include <chrono>
 
 class RD3D {
 private:
