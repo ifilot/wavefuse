@@ -65,13 +65,13 @@ find_package(Boost COMPONENTS regex REQUIRED)
 set(CUDA_SEPARABLE_COMPILATION ON)
 set(CUDA_PROPAGATE_HOST_FLAGS OFF)
 set(CUDA_HOST_COMPILER g++)
+pkg_check_modules(GLM glm REQUIRED)
 pkg_check_modules(TCLAP tclap REQUIRED)
-pkg_check_modules(EIGEN eigen3 REQUIRED)
 
 # Set include folders
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_BINARY_DIR}
-                    ${EIGEN_INCLUDE_DIRS}
+                    ${GLM_INCLUDE_DIRS}
                     ${TCLAP_INCLUDE_DIR}
                     ${Boost_INCLUDE_DIRS})
 
