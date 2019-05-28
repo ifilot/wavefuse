@@ -24,5 +24,8 @@ my = 256
 mz = 256
 zeroflux = true
 
+# set which concentration to store
+store = A
+
 # GPU settings
 pencils = 4

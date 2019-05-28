@@ -39,7 +39,7 @@ private:
     const std::vector<std::string> double_vars = {"Da", "Db", "dt", "dx", "c1", "c2"};
     const std::vector<std::string> uint_vars = {"timesteps", "tsteps", "mx", "my", "mz", "pencils"};
     const std::vector<std::string> bool_vars = {"zeroflux"};
-    const std::vector<std::string> string_vars = {"type"};
+    const std::vector<std::string> string_vars = {"type", "store"};
 
     std::unordered_map<std::string, double> double_values;
     std::unordered_map<std::string, unsigned int> uint_values;

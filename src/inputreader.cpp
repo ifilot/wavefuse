@@ -94,6 +94,7 @@ RD3D InputReader::build_integrator(const std::string& inputfile) {
         }
 
         RD3D rd3d;
+        rd3d.set_store_conc(this->get_string("store"));
         rd3d.set_reaction_type(this->get_string("type"));
         rd3d.set_dimensions(this->get_uint("mx"), this->get_uint("my"), this->get_uint("mz"));
         rd3d.set_integration_variables(this->get_double("dt"), this->get_double("dx"), this->get_uint("timesteps"), this->get_uint("tsteps"));

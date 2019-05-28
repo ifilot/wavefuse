@@ -10,8 +10,8 @@ Db = 0.08
 # Integration constants
 dt = 0.25
 dx = 0.5
-timesteps = 360
-tsteps = 100
+timesteps = 20
+tsteps = 1000
 
 # Gray-Scott kinetic coefficients
 # Note that c1 and c2 correspond to f and k
@@ -23,6 +23,9 @@ mx = 256
 my = 256
 mz = 256
 zeroflux = true
+
+# set which concentration to store
+store = A
 
 # GPU settings
 pencils = 4

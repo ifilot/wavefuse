@@ -53,7 +53,6 @@ private:
     float dx = 0.5;             //!< spatial discretization
 
     // generalized kinetic parameters
-    float d_c1, d_c2, d_c3, d_c4;
     float c1, c2, c3, c4;
 
     unsigned int timesteps = 720;
@@ -64,6 +63,7 @@ private:
     bool zeroflux = true;
 
     KINETICS reaction_type = KINETICS::NONE;
+    std::string store_conc;
 
 public:
     /**
@@ -153,6 +153,15 @@ public:
         }
 
         throw std::runtime_error("Invalid reaction type encountered: " + type);
+    }
+
+    /**
+     * @brief      Set which concentration to store
+     *
+     * @param[in]  _store_conc  which concentration to store; A or B
+     */
+    void set_store_conc(const std::string& _store_conc) {
+        this->store_conc = _store_conc;
     }
 
 private:

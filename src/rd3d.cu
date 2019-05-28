@@ -196,7 +196,14 @@ void RD3D::run_cuda() {
         auto start = std::chrono::system_clock::now();
         char buffer[50];
         sprintf(buffer, "data_%03i.bin", (t+1));
-        this->write_binary(std::string(buffer), b);
+        if(this->store_conc == "A") {
+            this->write_binary(std::string(buffer), a);
+        } else if(this->store_conc == "B") {
+            this->write_binary(std::string(buffer), b);
+        } else {
+            throw std::runtime_error("Unclear which concentration to store: " + this->store_conc);
+        }
+
         auto end = std::chrono::system_clock::now();
         std::chrono::duration<double> elapsed_seconds = end-start;
 
