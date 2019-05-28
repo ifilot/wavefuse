@@ -1,0 +1,31 @@
+# inputfile for Brusselator reaction-diffusion system
+
+# set reaction kinetics type
+type = BRUSSELATOR
+
+# Diffusion constants
+Da = 3.00
+Db = 10.0
+
+# Integration constants
+dt = 0.0025
+dx = 0.5
+timesteps = 100
+tsteps = 50
+
+# Brusselator kinetic coefficients
+# Note that c1 and c2 correspond to alpha and beta
+c1 = 3.0
+c2 = 10.0
+
+# Unit cell dimensions
+mx = 128
+my = 128
+mz = 128
+zeroflux = false
+
+# set which concentration to store
+store = A
+
+# GPU settings
+pencils = 4

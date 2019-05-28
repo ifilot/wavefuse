@@ -22,10 +22,6 @@
 #ifndef _REACTION_GRAY_SCOTT
 #define _REACTION_GRAY_SCOTT
 
-// constant variables on device
-__device__ __constant__ float d_f;
-__device__ __constant__ float d_k;
-
 /**
  * @brief      Calculate gray-scott reaction rate
  *
@@ -40,8 +36,8 @@ __global__ void reaction_gray_scott(const float *fx, const float *fy, float *drx
 
     for(int i = index; i < d_ncells; i += stride) {
         float r = fx[i] * fy[i] * fy[i];
-        drx[i] = -r + d_f * (1.0 - fx[i]);
-        dry[i] = r - (d_f + d_k) * fy[i];
+        drx[i] = -r + d_c1 * (1.0 - fx[i]);
+        dry[i] = r - (d_c1 + d_c2) * fy[i];
     }
 }
 

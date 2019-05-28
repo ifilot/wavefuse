@@ -1,5 +1,8 @@
 # inputfile for Gray-Scott reaction-diffusion system
 
+# set reaction kinetics type
+type = GRAY_SCOTT
+
 # Diffusion constants
 Da = 0.16
 Db = 0.08
@@ -7,18 +10,22 @@ Db = 0.08
 # Integration constants
 dt = 0.25
 dx = 0.5
-timesteps = 360
-tsteps = 100
+timesteps = 20
+tsteps = 1000
 
 # Gray-Scott kinetic coefficients
-f = 0.0392
-k = 0.0649
+# Note that c1 and c2 correspond to f and k
+c1 = 0.0392
+c2 = 0.0649
 
 # Unit cell dimensions
 mx = 256
 my = 256
 mz = 256
 zeroflux = true
+
+# set which concentration to store
+store = A
 
 # GPU settings
 pencils = 4
