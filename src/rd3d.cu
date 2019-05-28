@@ -220,7 +220,23 @@ void RD3D::run_cuda() {
         printf("  Time step:        %12.6f ms\n", update_times);
         printf("  Other:            %12.6f ms\n\n", other_times);
         printf("  Writing results to: %s\n", buffer);
-        printf("  Writing data:     %12.6f ms\n", elapsed_seconds.count() * 1000);
+        printf("  Writing data:     %12.6f ms\n\n", elapsed_seconds.count() * 1000);
+
+
+        // output lowest and highest values
+        float min = 100.0;
+        float max = 0.0;
+        for(unsigned int i=0; i<this->ncells; i++) {
+            min = std::min(min, this->a[i]);
+        }
+        for(unsigned int i=0; i<this->ncells; i++) {
+            max = std::max(max, this->a[i]);
+        }
+
+        printf("  Min   = %12.6f\n", min);
+        printf("  Max   = %12.6f\n", max);
+        printf("  Range = %12.6f\n", max - min);
+
         printf("------------------------------------------\n");
         printf("\n");
     }
