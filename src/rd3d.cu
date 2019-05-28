@@ -23,9 +23,12 @@
 #include "check_cuda.h"
 #include "cuda_events.h"
 
+// general configuration file
+#include "config.h"
+
 // include kernels
 #include "kernels/laplacians.h"
-#include "kernels/reaction_gray_scott.h"
+#include "kernels/reaction_kinetics.h"
 #include "kernels/update.h"
 
 // other includes
@@ -162,7 +165,16 @@ void RD3D::run_cuda() {
 
             // calculate reaction
             start_event(&startEventKernel);
-            reaction_gray_scott<<<grid,block>>>(d_a, d_b, d_ra, d_rb);
+            switch(this->reaction_type) {
+                case KINETICS::GRAY_SCOTT:
+                    reaction_gray_scott<<<grid,block>>>(d_a, d_b, d_ra, d_rb);
+                break;
+                case KINETICS::BRUSSELATOR:
+                    reaction_brusselator<<<grid,block>>>(d_a, d_b, d_ra, d_rb);
+                break;
+                default:
+                    throw std::runtime_error("Invalid reaction system encountered.");
+            }
             reaction_times += stop_event(&startEventKernel, &stopEventKernel);;
 
             // update
@@ -224,7 +236,19 @@ void RD3D::initialize_variables() {
     std::cout << "Constructing initial concentrations...";
     this->a = new float[this->ncells];
     this->b = new float[this->ncells];
-    this->build_input(a,b);
+
+    switch(this->reaction_type) {
+        case KINETICS::GRAY_SCOTT:
+            this->build_input_central_cube(a, b, 1.0f, 0.0f, 0.5f, 0.25f, 0.05f);
+        break;
+        case KINETICS::BRUSSELATOR:
+            this->build_input_random(a, b, this->c1, this->c2 / this->c1, 0.3);
+        break;
+        default:
+            throw std::runtime_error("Invalid reaction system encountered.");
+    }
+
+
     std::cout << donestring << std::endl;
 
     // allocate size on device
@@ -266,8 +290,8 @@ void RD3D::initialize_variables() {
     checkCuda( cudaMemcpyToSymbol(d_mz, &this->mz, sizeof(unsigned int)) );
     checkCuda( cudaMemcpyToSymbol(d_pencils, &this->pencils, sizeof(unsigned int)) );
     checkCuda( cudaMemcpyToSymbol(d_ncells, &this->ncells, sizeof(unsigned int)) );
-    checkCuda( cudaMemcpyToSymbol(d_f, &this->f, sizeof(float)) );
-    checkCuda( cudaMemcpyToSymbol(d_k, &this->k, sizeof(float)) );
+    checkCuda( cudaMemcpyToSymbol(d_c1, &this->c1, sizeof(float)) );
+    checkCuda( cudaMemcpyToSymbol(d_c2, &this->c2, sizeof(float)) );
     std::cout << donestring << std::endl;
 
     std::cout << "All ready for time-integration." << std::endl << std::endl;
@@ -298,25 +322,46 @@ void RD3D::cleanup_variables() {
 /**
  * @brief      Build random input
  *
- * @param      a     Concentration of a
- * @param      b     Concentration of b
+ * @param      a      Concentration of a
+ * @param      b      Concentration of b
+ * @param[in]  a0     initial value a
+ * @param[in]  b0     initial value b
+ * @param[in]  ca     central concentration for a
+ * @param[in]  cb     central concentration for b
+ * @param[in]  delta  perturbation strength
  */
-void RD3D::build_input(float* a, float* b) {
+void RD3D::build_input_central_cube(float* a, float* b, float a0, float b0, float ca, float cb, float delta) {
     // initialize with random data
-    const float delta = 0.05f;
     for(unsigned int i=0; i < this->ncells; i++) {
-        a[i] = 1.0 + uniform_dist() * delta;
-        b[i] = 0.0 + uniform_dist() * delta;
+        a[i] = a0 + uniform_dist() * delta;
+        b[i] = b0 + uniform_dist() * delta;
     }
 
     const unsigned int cbsz = 5;
     for(unsigned int z=this->mz/2-cbsz; z<this->mz/2+cbsz; z++) {
         for(unsigned int y=this->my/2-cbsz; y<this->my/2+cbsz; y++) {
             for(unsigned int x=this->mx/2-cbsz; x<this->mx/2+cbsz; x++) {
-                a[z * this->mx * this->my + y * this->mx + x] = 0.5f  + uniform_dist() * delta;
-                b[z * this->mx * this->my + y * this->mx + x] = 0.25f  + uniform_dist() * delta;
+                a[z * this->mx * this->my + y * this->mx + x] = ca  + uniform_dist() * delta;
+                b[z * this->mx * this->my + y * this->mx + x] = cb  + uniform_dist() * delta;
             }
         }
+    }
+}
+
+/**
+ * @brief      Build random input
+ *
+ * @param      a      Concentration of a
+ * @param      b      Concentration of b
+ * @param[in]  ca     central concentration for a
+ * @param[in]  cb     central concentration for b
+ * @param[in]  delta  perturbation strength
+ */
+void RD3D::build_input_random(float* a, float* b, float ca, float cb, float delta) {
+    // initialize with random data
+    for(unsigned int i=0; i < this->ncells; i++) {
+        a[i] = ca + uniform_dist() * delta;
+        b[i] = cb + uniform_dist() * delta;
     }
 }
 

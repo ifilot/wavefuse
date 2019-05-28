@@ -19,40 +19,19 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _REACTION_KINETICS_H
+#define _REACTION_KINETICS_H
 
-#include <string>
-#include <vector>
+// constant variables on device
+__device__ __constant__ float d_c1;
+__device__ __constant__ float d_c2;
+__device__ __constant__ float d_c3;
+__device__ __constant__ float d_c4;
 
-#define PROGNAME "@PROGNAME@"
-#define VERSION_MAJOR @VERSION_MAJOR@
-#define VERSION_MINOR @VERSION_MINOR@
-#define VERSION_MICRO @VERSION_MICRO@
-#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_MICRO@"
+#include "reaction_brusselator.h"
+#include "reaction_barkley.h"
+#include "reaction_gray_scott.h"
+#include "reaction_fitzhugh_nagumo.h"
+#include "reaction_lotka_volterra.h"
 
-static const std::string PROGRAM_NAME(PROGNAME);
-static const std::string PROGRAM_VERSION(VERSION);
-static const unsigned int PROGRAM_VERSION_MAJOR = VERSION_MAJOR;
-static const unsigned int PROGRAM_VERSION_MINOR = VERSION_MINOR;
-static const unsigned int PROGRAM_VERSION_MICRO = VERSION_MICRO;
-
-enum class KINETICS {
-    NONE,
-    LOTKA_VOLTERRA,
-    GRAY_SCOTT,
-    FITZHUGH_NAGUMO,
-    BRUSSELATOR,
-    BARKLEY
-};
-
-static const std::vector<KINETICS> kinetic_types = {
-    KINETICS::NONE,
-    KINETICS::LOTKA_VOLTERRA,
-    KINETICS::GRAY_SCOTT,
-    KINETICS::FITZHUGH_NAGUMO,
-    KINETICS::BRUSSELATOR,
-    KINETICS::BARKLEY
-};
-
-#endif // _CONFIG_H
+#endif // _REACTION_KINETICS_H

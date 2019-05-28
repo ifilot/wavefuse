@@ -29,6 +29,8 @@
 #include <fstream>
 #include <chrono>
 
+#include "config.h"
+
 class RD3D {
 private:
     unsigned int mx = 256;
@@ -45,12 +47,14 @@ private:
     float *d_a, *d_b, *d_dx2, *d_dy2, *d_dz2, *d_ra, *d_rb, *d_da, *d_db;
 
     // reaction settings of kinetic system
-    float f = 0.0392;           //!< reactivity constant f
-    float k = 0.0649;           //!< reactivity constant f
     float Da = 0.16;            //!< diffusion constant of A
     float Db = 0.08;            //!< diffusion constant of B
     float dt = 0.25;            //!< temporal discretization
     float dx = 0.5;             //!< spatial discretization
+
+    // generalized kinetic parameters
+    float d_c1, d_c2, d_c3, d_c4;
+    float c1, c2, c3, c4;
 
     unsigned int timesteps = 720;
     unsigned int tsteps = 100;
@@ -58,6 +62,8 @@ private:
     std::string donestring = "           [DONE]";
 
     bool zeroflux = true;
+
+    KINETICS reaction_type = KINETICS::NONE;
 
 public:
     /**
@@ -102,12 +108,12 @@ public:
     /**
      * @brief      Sets the kinetic variables.
      *
-     * @param[in]  _f    Gray-Scott parameter f
-     * @param[in]  _k    Gray-Scott parameter k
+     * @param[in]  _c1   Generalized kinetic parameter 1
+     * @param[in]  _c2   Generalized kinetic parameter 2
      */
-    void set_kinetic_variables(double _f, double _k) {
-        this->f = _f;
-        this->k = _k;
+    void set_kinetic_variables(double _c1, double _c2) {
+        this->c1 = _c1;
+        this->c2 = _c2;
     }
 
     /**
@@ -130,14 +136,49 @@ public:
         this->zeroflux = _zeroflux;
     }
 
+    /**
+     * @brief      Sets the reaction type.
+     *
+     * @param[in]  type  The reaction type
+     */
+    void set_reaction_type(const std::string& type) {
+        if(type == "BRUSSELATOR") {
+            this->reaction_type = KINETICS::BRUSSELATOR;
+            return;
+        }
+
+        if(type == "GRAY_SCOTT") {
+            this->reaction_type = KINETICS::GRAY_SCOTT;
+            return;
+        }
+
+        throw std::runtime_error("Invalid reaction type encountered: " + type);
+    }
+
 private:
     /**
      * @brief      Build random input
      *
-     * @param      a     Concentration of a
-     * @param      b     Concentration of b
+     * @param      a      Concentration of a
+     * @param      b      Concentration of b
+     * @param[in]  a0     initial value a
+     * @param[in]  b0     initial value b
+     * @param[in]  ca     central concentration for a
+     * @param[in]  cb     central concentration for b
+     * @param[in]  delta  perturbation strength
      */
-    void build_input(float* a, float* b);
+    void build_input_central_cube(float* a, float* b, float a0, float b0, float ca, float cb, float delta);
+
+    /**
+     * @brief      Build random input
+     *
+     * @param      a      Concentration of a
+     * @param      b      Concentration of b
+     * @param[in]  ca     central concentration for a
+     * @param[in]  cb     central concentration for b
+     * @param[in]  delta  perturbation strength
+     */
+    void build_input_random(float* a, float* b, float ca, float cb, float delta);
 
     /**
      * @brief      Initialize all variables

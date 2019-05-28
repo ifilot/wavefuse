@@ -19,40 +19,25 @@
  *                                                                        *
  **************************************************************************/
 
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _REACTION_FITZHUGH_NAGUMO
+#define _REACTION_FITZHUGH_NAGUMO
 
-#include <string>
-#include <vector>
+/**
+ * @brief      Calculate gray-scott reaction rate
+ *
+ * @param[in]  fx    pointer to concentration of compound A
+ * @param[in]  fy    pointer to concentration of compound B
+ * @param      drx   pointer to reaction rate of compound A
+ * @param      dry   pointer to reaction rate of compound B
+ */
+__global__ void reaction_fitzhugh_nagumo(const float *fx, const float *fy, float *drx, float *dry) {
+    int index = blockIdx.x * blockDim.x + threadIdx.x;
+    int stride = blockDim.x * gridDim.x;
 
-#define PROGNAME "@PROGNAME@"
-#define VERSION_MAJOR @VERSION_MAJOR@
-#define VERSION_MINOR @VERSION_MINOR@
-#define VERSION_MICRO @VERSION_MICRO@
-#define VERSION "@VERSION_MAJOR@.@VERSION_MINOR@.@VERSION_MICRO@"
+    for(int i = index; i < d_ncells; i += stride) {
+        drx[i] = fx[i] - (fx[i] * fx[i] * fx[i]) - fy[i] + d_c1;
+        dry[i] = (fx[i] - fy[i]) * d_c2;
+    }
+}
 
-static const std::string PROGRAM_NAME(PROGNAME);
-static const std::string PROGRAM_VERSION(VERSION);
-static const unsigned int PROGRAM_VERSION_MAJOR = VERSION_MAJOR;
-static const unsigned int PROGRAM_VERSION_MINOR = VERSION_MINOR;
-static const unsigned int PROGRAM_VERSION_MICRO = VERSION_MICRO;
-
-enum class KINETICS {
-    NONE,
-    LOTKA_VOLTERRA,
-    GRAY_SCOTT,
-    FITZHUGH_NAGUMO,
-    BRUSSELATOR,
-    BARKLEY
-};
-
-static const std::vector<KINETICS> kinetic_types = {
-    KINETICS::NONE,
-    KINETICS::LOTKA_VOLTERRA,
-    KINETICS::GRAY_SCOTT,
-    KINETICS::FITZHUGH_NAGUMO,
-    KINETICS::BRUSSELATOR,
-    KINETICS::BARKLEY
-};
-
-#endif // _CONFIG_H
+#endif // _REACTION_FITZHUGH_NAGUMO
