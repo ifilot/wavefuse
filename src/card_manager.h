@@ -23,9 +23,11 @@
 #define _CARD_MANAGER_H
 
 #include <iostream>
+#include <vector>
 
 class CardManager {
 private:
+    std::vector<std::string> gpu_names;
 
 public:
 
@@ -33,6 +35,15 @@ public:
      * @brief      Constructs the object.
      */
     CardManager();
+
+    /**
+     * @brief      Gets the gpu names.
+     *
+     * @return     The gpu names.
+     */
+    const auto& get_gpu_names() const {
+        return this->gpu_names;
+    }
 
     /**
      * @brief      Probe the available GPU units

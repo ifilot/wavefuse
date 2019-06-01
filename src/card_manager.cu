@@ -20,12 +20,27 @@
  **************************************************************************/
 
 #include "card_manager.h"
+#include "check_cuda.h"
 
 /**
  * @brief      Constructs the object.
  */
 CardManager::CardManager() {
+    int nDevices;
+    char buffer[100];
 
+    auto status = checkCuda(cudaGetDeviceCount(&nDevices));
+    if(status != cudaSuccess) {
+        throw std::runtime_error("Cannot detect a CUDA compatible card");
+    }
+
+    for(int i = 0; i < nDevices; i++) {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        int length = sprintf(buffer, "%s (device %i)", prop.name, i);
+        std::string gpu_name(buffer, length);
+        this->gpu_names.emplace_back(gpu_name);
+    }
 }
 
 /**
@@ -90,18 +105,20 @@ int CardManager::get_number_cores(void* prop) {
             } else if (devProp.minor == 0) {
                 cores = mp * 64;
             } else {
-                std::cerr << "Unknown device type" << std::endl;
+                std::cerr << "Unknown device type: " << devProp.major << "." << devProp.minor << std::endl;
             }
         break;
         case 7: // Volta
             if (devProp.minor == 0) {
                 cores = mp * 64;
+            } else if (devProp.minor == 5) { // Turing
+                cores = mp * 64;
             } else {
-                std::cerr << "Unknown device type" << std::endl;
+                std::cerr << "Unknown device type: " << devProp.major << "." << devProp.minor << std::endl;
             }
         break;
         default:
-            std::cerr << "Unknown device type" << std::endl;
+            std::cerr << "Unknown device type: " << devProp.major << "." << devProp.minor << std::endl;
         break;
     }
 
