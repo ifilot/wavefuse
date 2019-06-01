@@ -40,6 +40,8 @@ int main(int argc, char* argv[]) {
         TCLAP::ValueArg<std::string> arg_input_filename("i","input","Input file",true,"input","filename");
         cmd.add(arg_input_filename);
 
+        TCLAP::SwitchArg arg_detect("d","detect","Detects available CUDA cards, then terminates.", cmd, false);
+
         cmd.parse(argc, argv);
 
         std::cout << "--------------------------------------------------------------" << std::endl;
@@ -52,6 +54,11 @@ int main(int argc, char* argv[]) {
 
         CardManager cm;
         cm.probe_cards();
+
+        if(arg_detect.getValue()) {
+            std::cout << "Just probing available CUDA cards. Done." << std::endl << std::endl;
+            return 0;
+        }
 
         InputReader ir;
         RD3D rd3d = ir.build_integrator(arg_input_filename.getValue());
