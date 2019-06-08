@@ -46,7 +46,8 @@ int main(int argc, char* argv[]) {
 
         std::cout << "--------------------------------------------------------------" << std::endl;
         std::cout << "Executing "<< PROGRAM_NAME << " v." << PROGRAM_VERSION << std::endl;
-        std::cout << "Author: Ivo Filot <i.a.w.filot@tue.nl>" << std::endl;
+        std::cout << "Authors: Ivo Filot" << std::endl;
+        std::cout << "         Anouk de Leeuw den Bouter" << std::endl;
         std::cout << "Website: https://github.com/ifilot/wavefuse" << std::endl;
         std::cout << "--------------------------------------------------------------" << std::endl;
 

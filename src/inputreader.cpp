@@ -93,12 +93,21 @@ RD3D InputReader::build_integrator(const std::string& inputfile) {
             }
         }
 
+        // insert default kinetic values if not found
+        std::vector<std::string> vars = {"c1", "c2", "c3", "c4"};
+        for(const auto&var : vars) {
+            auto got = this->double_values.find(var);
+            if(got == this->double_values.end()) {
+                this->double_values.emplace(var, 0.0);
+            }
+        }
+
         RD3D rd3d;
         rd3d.set_store_conc(this->get_string("store"));
         rd3d.set_reaction_type(this->get_string("type"));
         rd3d.set_dimensions(this->get_uint("mx"), this->get_uint("my"), this->get_uint("mz"));
         rd3d.set_integration_variables(this->get_double("dt"), this->get_double("dx"), this->get_uint("timesteps"), this->get_uint("tsteps"));
-        rd3d.set_kinetic_variables(this->get_double("c1"), this->get_double("c2"));
+        rd3d.set_kinetic_variables(this->get_double("c1"), this->get_double("c2"), this->get_double("c3"), this->get_double("c4"));
         rd3d.set_diffusion_parameters(this->get_double("Da"), this->get_double("Db"));
         rd3d.set_zeroflux(this->get_bool("zeroflux"));
 

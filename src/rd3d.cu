@@ -172,6 +172,9 @@ void RD3D::run_cuda() {
                 case KINETICS::BRUSSELATOR:
                     reaction_brusselator<<<grid,block>>>(d_a, d_b, d_ra, d_rb);
                 break;
+                case KINETICS::BARKLEY:
+                    reaction_barkley<<<grid,block>>>(d_a, d_b, d_ra, d_rb);
+                break;
                 default:
                     throw std::runtime_error("Invalid reaction system encountered.");
             }
@@ -267,6 +270,9 @@ void RD3D::initialize_variables() {
         case KINETICS::BRUSSELATOR:
             this->build_input_random(a, b, this->c1, this->c2 / this->c1, 0.3);
         break;
+        case KINETICS::BARKLEY:
+            this->build_input_half_screen(a, b, 1.0, this->c1 / 2.0);
+        break;
         default:
             throw std::runtime_error("Invalid reaction system encountered.");
     }
@@ -315,6 +321,8 @@ void RD3D::initialize_variables() {
     checkCuda( cudaMemcpyToSymbol(d_ncells, &this->ncells, sizeof(unsigned int)) );
     checkCuda( cudaMemcpyToSymbol(d_c1, &this->c1, sizeof(float)) );
     checkCuda( cudaMemcpyToSymbol(d_c2, &this->c2, sizeof(float)) );
+    checkCuda( cudaMemcpyToSymbol(d_c3, &this->c3, sizeof(float)) );
+    checkCuda( cudaMemcpyToSymbol(d_c4, &this->c4, sizeof(float)) );
     std::cout << donestring << std::endl;
 
     std::cout << "All ready for time-integration." << std::endl << std::endl;
@@ -385,6 +393,34 @@ void RD3D::build_input_random(float* a, float* b, float ca, float cb, float delt
     for(unsigned int i=0; i < this->ncells; i++) {
         a[i] = ca + uniform_dist() * delta;
         b[i] = cb + uniform_dist() * delta;
+    }
+}
+
+/**
+ * @brief      Build input with half screen filling
+ *
+ * @param      a     Concentration matrix A
+ * @param      b     Concentration matrix B
+ * @param[in]  ca    concentration of A in center
+ * @param[in]  cb    concentration of B in center
+ */
+void RD3D::build_input_half_screen(float* a, float* b, float ca, float cb) const {
+    // set concentration of A to lower half of the unit cell
+    for(unsigned int z=0; z<this->mz/2; z++) {
+        for(unsigned int y=0; y<this->my; y++) {
+            for(unsigned int x=0; x<this->mx; x++) {
+                a[z * this->mx * this->my + y * this->mx + x] = ca;
+            }
+        }
+    }
+
+    // set concentration of B to left half of the screen
+    for(unsigned int z=0; z<this->mz; z++) {
+        for(unsigned int y=0; y<this->my; y++) {
+            for(unsigned int x=0; x<this->mx/2; x++) {
+                b[z * this->mx * this->my + y * this->mx + x] = cb;
+            }
+        }
     }
 }
 

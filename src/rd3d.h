@@ -110,10 +110,14 @@ public:
      *
      * @param[in]  _c1   Generalized kinetic parameter 1
      * @param[in]  _c2   Generalized kinetic parameter 2
+     * @param[in]  _c3   Generalized kinetic parameter 3
+     * @param[in]  _c4   Generalized kinetic parameter 4
      */
-    void set_kinetic_variables(double _c1, double _c2) {
+    void set_kinetic_variables(double _c1, double _c2, double _c3, double _c4) {
         this->c1 = _c1;
         this->c2 = _c2;
+        this->c3 = _c3;
+        this->c4 = _c4;
     }
 
     /**
@@ -149,6 +153,11 @@ public:
 
         if(type == "GRAY_SCOTT") {
             this->reaction_type = KINETICS::GRAY_SCOTT;
+            return;
+        }
+
+        if(type == "BARKLEY") {
+            this->reaction_type = KINETICS::BARKLEY;
             return;
         }
 
@@ -188,6 +197,16 @@ private:
      * @param[in]  delta  perturbation strength
      */
     void build_input_random(float* a, float* b, float ca, float cb, float delta);
+
+    /**
+     * @brief      Build input with half screen filling
+     *
+     * @param      a     Concentration matrix A
+     * @param      b     Concentration matrix B
+     * @param[in]  ca    concentration of A in center
+     * @param[in]  cb    concentration of B in center
+     */
+    void build_input_half_screen(float* a, float* b, float ca, float cb) const;
 
     /**
      * @brief      Initialize all variables
